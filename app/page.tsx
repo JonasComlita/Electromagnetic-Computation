@@ -21,6 +21,11 @@ const MODULES = [
     title: 'Phase 4: Architectures',
     blurb: 'Compare binary, analog, ternary, and quantum computation on one shared scenario.',
     href: '/guided#phase-4'
+  },
+  {
+    title: 'Lesson 5: Circuit Emulation',
+    blurb: 'Go under the hood with transistor and circuit-level models for binary, analog, and ternary.',
+    href: '/lessons/phase-5'
   }
 ];
 
@@ -81,6 +86,9 @@ export default function HomePage(): JSX.Element {
           </Link>
           <Link href="/lessons/phase-4" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
             Lesson 4
+          </Link>
+          <Link href="/lessons/phase-5" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+            Lesson 5
           </Link>
         </div>
       </section>

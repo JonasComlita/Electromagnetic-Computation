@@ -8,5 +8,5 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     strong: (props) => <strong className="text-white" {...props} />,
     code: (props) => <code className="rounded bg-slate-900 px-1.5 py-0.5 text-warm" {...props} />,
     ...components
-  };
+  } as MDXComponents;
 }

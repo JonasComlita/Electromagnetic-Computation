@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ArchitectureComparePanel } from '@/components/simulations/ArchitectureComparePanel';
 import { ArchitectureDeepDive } from '@/components/simulations/ArchitectureDeepDive';
 
@@ -11,6 +12,9 @@ export default function ComparePage(): JSX.Element {
           This page isolates architecture behavior: Binary, Analog, Ternary, and Quantum adapters receive identical initial values
           and frame configuration.
         </p>
+        <Link href="/lessons/phase-5" className="mt-4 inline-block rounded-full border border-white/20 px-3 py-1.5 text-sm text-slate-100 hover:bg-white/10">
+          Open Lesson 5: Circuit Emulation
+        </Link>
       </section>
 
       <ArchitectureComparePanel />

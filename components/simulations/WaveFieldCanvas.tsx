@@ -52,7 +52,7 @@ function WavePoints({
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute ref={attributeRef} attach="attributes-position" count={count} itemSize={3} array={positions} />
+        <bufferAttribute ref={attributeRef} attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <pointsMaterial color="#4dd9ff" size={0.05} sizeAttenuation />
     </points>

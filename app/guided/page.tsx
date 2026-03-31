@@ -27,6 +27,9 @@ export default function GuidedPage(): JSX.Element {
           <Link href="/lessons/phase-4" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
             Lesson: Architectures
           </Link>
+          <Link href="/lessons/phase-5" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+            Lesson: Circuits
+          </Link>
         </div>
       </section>
 
