@@ -4,13 +4,14 @@ import { PhaseFieldPanel } from '@/components/phases/PhaseFieldPanel';
 import { PhaseRelativityPanel } from '@/components/phases/PhaseRelativityPanel';
 import { PhaseTensorPanel } from '@/components/phases/PhaseTensorPanel';
 import { PhaseArchitecturePanel } from '@/components/phases/PhaseArchitecturePanel';
+import { PhaseEmulationPanel } from '@/components/phases/PhaseEmulationPanel';
 
 export default function GuidedPage(): JSX.Element {
   return (
     <div className="space-y-8">
       <section className="panel rounded-3xl p-6">
         <p className="text-xs uppercase tracking-[0.25em] text-accent/75">Guided Path</p>
-        <h2 className="mt-2 text-3xl font-semibold text-white">What &rarr; Why &rarr; How &rarr; Compare</h2>
+        <h2 className="mt-2 text-3xl font-semibold text-white">What &rarr; Why &rarr; How &rarr; Compare &rarr; Emulate</h2>
         <p className="mt-3 max-w-3xl text-slate-200">
           Follow the narrative in order, then branch into free exploration. You can open matching MDX lesson notes at each phase.
         </p>
@@ -38,6 +39,7 @@ export default function GuidedPage(): JSX.Element {
       <PhaseRelativityPanel />
       <PhaseTensorPanel />
       <PhaseArchitecturePanel />
+      <PhaseEmulationPanel />
     </div>
   );
 }

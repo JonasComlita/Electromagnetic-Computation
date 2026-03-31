@@ -29,6 +29,55 @@ const defaultFrame: FrameConfig = {
   phaseOffset: 0
 };
 
+function finiteOr(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function normalizeEMState(raw: unknown): EMState6 {
+  const data = (raw ?? {}) as Partial<EMState6>;
+  return {
+    ex: finiteOr(data.ex, BASE_EM_STATE.ex),
+    ey: finiteOr(data.ey, BASE_EM_STATE.ey),
+    ez: finiteOr(data.ez, BASE_EM_STATE.ez),
+    bx: finiteOr(data.bx, BASE_EM_STATE.bx),
+    by: finiteOr(data.by, BASE_EM_STATE.by),
+    bz: finiteOr(data.bz, BASE_EM_STATE.bz)
+  };
+}
+
+function normalizeFrame(raw: unknown): FrameConfig {
+  const data = (raw ?? {}) as Partial<FrameConfig>;
+  return {
+    velocityVc: finiteOr(data.velocityVc, defaultFrame.velocityVc),
+    frequency: finiteOr(data.frequency, defaultFrame.frequency),
+    amplitude: finiteOr(data.amplitude, defaultFrame.amplitude),
+    phaseOffset: finiteOr(data.phaseOffset, defaultFrame.phaseOffset)
+  };
+}
+
+function normalizeTier(raw: unknown): LessonTier {
+  return raw === 'student' || raw === 'advanced' ? raw : 'beginner';
+}
+
+function normalizeObserver(raw: unknown): ObserverMode {
+  return raw === 'moving' ? 'moving' : 'rest';
+}
+
+function normalizePhases(raw: unknown): number[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const set = new Set<number>();
+  for (const item of raw) {
+    if (typeof item === 'number' && Number.isFinite(item)) {
+      set.add(Math.trunc(item));
+    }
+  }
+
+  return Array.from(set).sort((a, b) => a - b);
+}
+
 export const useSessionStore = create<SessionStore>()(
   persist(
     (set, get) => ({
@@ -38,14 +87,15 @@ export const useSessionStore = create<SessionStore>()(
       observerMode: 'rest',
       completedPhases: [],
       setTier: (tier) => {
-        set({ tier });
+        set({ tier: normalizeTier(tier) });
         trackEvent('tier_changed', { tier });
       },
-      setEMState: (state) => set({ emState: state }),
-      patchFrame: (patch) => set({ frame: { ...get().frame, ...patch } }),
+      setEMState: (state) => set({ emState: normalizeEMState(state) }),
+      patchFrame: (patch) => set({ frame: normalizeFrame({ ...get().frame, ...patch }) }),
       setObserverMode: (mode) => {
-        set({ observerMode: mode });
-        trackEvent('observer_changed', { mode });
+        const normalized = normalizeObserver(mode);
+        set({ observerMode: normalized });
+        trackEvent('observer_changed', { mode: normalized });
       },
       toggleCompletedPhase: (phaseId) => {
         const phases = new Set(get().completedPhases);
@@ -61,6 +111,29 @@ export const useSessionStore = create<SessionStore>()(
     }),
     {
       name: 'em-session-store',
+      version: 2,
+      migrate: (persistedState) => {
+        const state = (persistedState ?? {}) as Partial<SessionStore>;
+        return {
+          tier: normalizeTier(state.tier),
+          emState: normalizeEMState(state.emState),
+          frame: normalizeFrame(state.frame),
+          observerMode: normalizeObserver(state.observerMode),
+          completedPhases: normalizePhases(state.completedPhases)
+        };
+      },
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<SessionStore>;
+        return {
+          ...currentState,
+          ...persisted,
+          tier: normalizeTier(persisted.tier),
+          emState: normalizeEMState(persisted.emState),
+          frame: normalizeFrame(persisted.frame),
+          observerMode: normalizeObserver(persisted.observerMode),
+          completedPhases: normalizePhases(persisted.completedPhases)
+        };
+      },
       partialize: (state) => ({
         tier: state.tier,
         emState: state.emState,

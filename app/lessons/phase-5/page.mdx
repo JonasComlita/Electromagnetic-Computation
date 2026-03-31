@@ -1,0 +1,79 @@
+import Link from 'next/link';
+
+# Lesson 5: Transistor and Circuit-Level Emulation
+
+Lessons 1-4 established field representation, observer effects, tensor transforms, and architecture-level tradeoffs.
+
+Lesson 5 explains where those tradeoffs come from at the circuit layer.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Explain how transistor and RC-style behavior drives architecture-level outcomes.
+- Connect waveform shape to latency, drift, and stability.
+- Distinguish architecture simulation from circuit-level emulation.
+
+## Why this lesson exists
+
+Architecture comparisons summarize behavior at a high level.
+
+Circuit models reveal the physical causes underneath:
+
+- Binary behavior emerges from pull-up/pull-down switching dynamics.
+- Analog behavior emerges from integration, filtering, leakage, and environmental perturbation.
+- Ternary behavior emerges from multi-threshold branching around balanced states.
+
+This is the bridge between logic abstractions and electrical behavior.
+
+## Binary CMOS lens
+
+Model focus:
+
+- inverter-chain switching
+- pull-up/pull-down conductance competition
+- propagation delay and settling
+
+Primary question:
+
+How quickly and cleanly does a discrete edge settle to a stable logic level?
+
+## Analog RC lens
+
+Model focus:
+
+- continuous RC integration
+- low-pass filtering and attenuation
+- temperature/noise drift
+
+Primary question:
+
+How much lag and amplitude loss appears under realistic analog conditions?
+
+## Ternary multi-threshold lens
+
+Model focus:
+
+- low/mid/high conduction branches
+- balanced ternary thresholds around zero
+- neutral-state stability versus rapid flips
+
+Primary question:
+
+How do threshold choices preserve symmetry while keeping transitions stable?
+
+## Run the Lab in Phase 5
+
+The interactive circuit lab is intentionally separated from this lesson page and lives in Guided Phase 5.
+
+<div className="panel mt-4 rounded-2xl p-5 text-sm text-slate-200">
+  <div className="mt-0 leading-7">Read here for theory, then run the simulator in the guided phase panel.</div>
+  <div className="mt-3 flex flex-wrap gap-2">
+    <Link href="/guided#phase-5" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+      Open Phase 5 Lab
+    </Link>
+    <Link href="/compare" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+      Back to Architecture Compare
+    </Link>
+  </div>
+</div>

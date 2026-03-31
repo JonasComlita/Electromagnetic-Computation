@@ -7,7 +7,8 @@ const PHASES = [
   { id: 1, title: 'Field', href: '/guided#phase-1' },
   { id: 2, title: 'Relativity', href: '/guided#phase-2' },
   { id: 3, title: 'Matrix', href: '/guided#phase-3' },
-  { id: 4, title: 'Architectures', href: '/guided#phase-4' }
+  { id: 4, title: 'Architectures', href: '/guided#phase-4' },
+  { id: 5, title: 'Circuit Emulation', href: '/guided#phase-5' }
 ];
 
 export function ProgressOverview(): JSX.Element {
@@ -26,7 +27,7 @@ export function ProgressOverview(): JSX.Element {
           Reset
         </button>
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {PHASES.map((phase) => {
           const done = completed.includes(phase.id);
           return (

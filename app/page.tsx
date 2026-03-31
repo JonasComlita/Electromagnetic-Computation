@@ -23,9 +23,9 @@ const MODULES = [
     href: '/guided#phase-4'
   },
   {
-    title: 'Lesson 5: Circuit Emulation',
+    title: 'Phase 5: Circuit Emulation',
     blurb: 'Go under the hood with transistor and circuit-level models for binary, analog, and ternary.',
-    href: '/lessons/phase-5'
+    href: '/guided#phase-5'
   }
 ];
 

@@ -1,11 +1,11 @@
 import Link from 'next/link';
 
 const LESSONS = [
-  { href: '/lessons/phase-1', label: 'Phase 1: The Field' },
-  { href: '/lessons/phase-2', label: 'Phase 2: Relativity and Lag' },
-  { href: '/lessons/phase-3', label: 'Phase 3: 4x4 vs 6-value' },
-  { href: '/lessons/phase-4', label: 'Phase 4: Architectures' },
-  { href: '/lessons/phase-5', label: 'Phase 5: Transistor and Circuit Emulation' }
+  { href: '/lessons/phase-1', label: 'Lesson 1: The Field' },
+  { href: '/lessons/phase-2', label: 'Lesson 2: Relativity and Lag' },
+  { href: '/lessons/phase-3', label: 'Lesson 3: 4x4 vs 6-value' },
+  { href: '/lessons/phase-4', label: 'Lesson 4: Architectures' },
+  { href: '/lessons/phase-5', label: 'Lesson 5: Transistor and Circuit Emulation' }
 ];
 
 export default function LessonsIndexPage(): JSX.Element {
