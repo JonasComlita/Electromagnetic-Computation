@@ -1,0 +1,97 @@
+# Lesson 1: The Field
+
+This lesson establishes the core data model for the entire site.
+
+At any point in space and time, the local electromagnetic state is described by six values:
+
+- Electric components: `Ex`, `Ey`, `Ez`
+- Magnetic components: `Bx`, `By`, `Bz`
+
+A lot of people start with a picture of a single sinusoidal line. That picture is useful, but incomplete. A real wave is a local vector relationship, not just one moving scalar.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Explain why one number is not enough to represent an EM state at a point.
+- Describe how electric and magnetic components co-evolve.
+- Connect frequency, amplitude, and phase controls to changes in all six values.
+
+## Mental model: each point is a dashboard
+
+Imagine every point in the simulation as a tiny dashboard with six dials.
+
+- Three dials for electric orientation and strength.
+- Three dials for magnetic orientation and strength.
+- The dials are coupled: when one set changes, the other responds with structured lag/phase relationships.
+
+This is why the persistent "6-number state" bar matters. It reminds you that all modules are operating on the same object.
+
+## What the controls do
+
+When you adjust controls in the interactive panel:
+
+- `frequency` changes how quickly the local state cycles.
+- `amplitude` scales the magnitude of component swings.
+- `phase` changes timing alignment between cycles.
+- `pluck` injects a local disturbance that propagates through the evolving state.
+
+## Beginner lens
+
+A wave is not "one up/down line." It is a patterned update of six numbers over time.
+
+## Student lens
+
+Treat the wave as a six-dimensional state transition process sampled each timestep. The visualization is one projection of that state.
+
+## Advanced lens
+
+Use this local six-value basis as the canonical payload that later gets transformed (frame changes) and re-encoded (architecture comparisons).
+
+## Common misconception
+
+"If I can draw one waveform, I have the field."
+
+Not quite. A single plotted line can visualize one component, but the physical state needs all six independent component values.
+
+## Inline Diagram
+
+```text
+Plane-wave intuition (one common orientation):
+
+Propagation: +x direction
+
+E-field oscillates along y:
+              ^ y
+              |
+      ~~~ ~~~ | ~~~ ~~~
+--------------+------------------> x
+
+B-field oscillates along z:
+              z (out/in of page)
+
+Local state at one x,t still requires:
+[Ex, Ey, Ez, Bx, By, Bz]
+```
+
+## Try this in the simulator
+
+1. Keep velocity near zero.
+2. Increase frequency and watch how rapidly all six values rotate through states.
+3. Add a pluck and observe short-term imbalance before the pattern stabilizes.
+4. Ask: which changes looked geometric, and which looked like scaling?
+
+## Checkpoint Quiz
+
+1. Why is a single scalar amplitude not enough to define an EM field state at a point?
+2. If you double amplitude, what kind of change do you expect in the six components?
+3. Which control primarily changes how fast states cycle: frequency, amplitude, or phase?
+
+<details>
+  <summary>Show answers</summary>
+
+1. Because the local EM state contains directional electric and magnetic content, requiring six component values.
+2. Mostly a scaling change in component magnitudes, not a new coordinate basis.
+3. Frequency.
+
+</details>

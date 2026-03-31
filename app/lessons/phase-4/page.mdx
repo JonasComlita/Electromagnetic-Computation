@@ -1,0 +1,241 @@
+# Lesson 4: Architecture Comparison
+
+Now we compare four computational paradigms on one identical field scenario.
+
+This is the capstone: same physics input, different representation and update mechanics.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Describe how representation choices change latency, drift, and operation cost.
+- Explain why fairness requires a shared scenario across architectures.
+- Defend architecture tradeoffs for a chosen educational or computational goal.
+
+## The comparison protocol
+
+Each architecture receives:
+
+- The same initial six-value field state.
+- The same frame configuration (`velocity`, `frequency`, `amplitude`, `phase`).
+- The same simulation timestep and number of steps.
+
+This isolates architecture behavior from scenario bias.
+
+## How to read the results panel
+
+For each architecture, focus on four outputs:
+
+- `state`: resulting `E(...)` and `B(...)` values after the same run.
+- `latency`: conceptual cost per update.
+- `cycles`: discrete operation burden accumulated over steps.
+- `drift`: how far representation deviates from idealized signal behavior.
+
+The trace log shows *how* each architecture updated state, not just the final answer.
+
+## Architecture deep detail
+
+### Binary (deterministic approximator)
+
+#### State encoding
+
+Binary stores each field component as a finite signed number (fixed-point style in this app). A scale factor maps real-valued amplitudes to integer-like words.
+
+Example mapping idea:
+
+```text
+EMState6 real -> scaled int lanes
+ex = 0.742  -> 742
+ey = -0.115 -> -115
+...
+```
+
+#### Update pathway
+
+1. Decode stored words into working numeric values.
+2. Run update math for field evolution.
+3. Re-encode with sign handling and clamping.
+4. Charge cycle cost for component-level arithmetic.
+
+#### Primitive operations
+
+- sign-aware add/subtract
+- shift/scale
+- overflow and clamp checks
+- two-complement style signed behavior
+
+#### What can go wrong
+
+- Quantization error accumulates when repeated rounding is applied.
+- Small real changes may disappear if below representable step size.
+- Cycle costs can climb quickly with finer precision.
+
+#### Best use case
+
+When deterministic replay and ecosystem compatibility matter most.
+
+---
+
+### Analog (continuous mirror)
+
+#### State encoding
+
+Analog keeps components as continuous values and evolves them directly without hard digitization at every step.
+
+#### Update pathway
+
+1. Integrate component updates in continuous space.
+2. Inject environment effects (noise, thermal drift).
+3. Emit measured state with perturbation included.
+
+#### Primitive operations
+
+- continuous accumulation
+- weighted summation
+- perturbation/noise application
+- drift trend terms
+
+#### What can go wrong
+
+- Noise and temperature perturbations can drift state over time.
+- Exact replay is difficult unless perturbations are tightly controlled.
+- Parameter tuning can dominate behavior if configured poorly.
+
+#### Best use case
+
+When teaching signal intuition, continuity, and robustness boundaries.
+
+---
+
+### Ternary (balanced symmetry)
+
+#### State encoding
+
+Each component is encoded around zero in balanced states (`-1`, `0`, `+1`).
+
+This symmetry makes sign reversal operations conceptually clean.
+
+#### Update pathway
+
+1. Sample current field values.
+2. Encode each component to balanced trits by threshold.
+3. Apply trit-domain transforms (flip/shift style operations).
+4. Decode for display and comparison.
+
+#### Primitive operations
+
+- balanced sign flip
+- trit shift
+- threshold encode/decode
+
+#### What can go wrong
+
+- Coarse thresholds can suppress small but meaningful variations.
+- Over-aggressive thresholding can make dynamics appear "sticky" around zero.
+- Precision scaling requires more trits and more complex decoding.
+
+#### Best use case
+
+When symmetry, sign logic, and compact directional reasoning are primary learning targets.
+
+---
+
+### Quantum (phase-native conceptual model)
+
+#### State encoding
+
+This site uses a conceptual single-qubit style model where phase/orientation (Bloch-like controls) modulates component projections.
+
+#### Update pathway
+
+1. Advance phase (`phi`) and orientation (`theta`).
+2. Build orientation vector.
+3. Project wave-like state through that orientation.
+4. Emit modulated EM component readout.
+
+#### Primitive operations
+
+- phase rotation
+- orientation update
+- geometric projection
+
+#### What can go wrong
+
+- Learners may over-interpret this as full hardware-level quantum simulation.
+- Without context, geometric intuition can feel abstract.
+- Hardware noise/circuit depth constraints are not represented here.
+
+#### Best use case
+
+When introducing phase-native thinking and geometric state interpretation.
+
+## Side-by-side tradeoff table
+
+| Architecture | Precision Style | Typical Strength | Typical Weakness |
+| --- | --- | --- | --- |
+| Binary | Fixed-width discrete | Determinism and reproducibility | Quantization and cycle overhead |
+| Analog | Continuous | Physical smoothness and speed intuition | Drift/noise sensitivity |
+| Ternary | Balanced discrete | Sign symmetry and compact direction logic | Coarse granularity if under-encoded |
+| Quantum (conceptual) | Phase/orientation driven | Geometric phase intuition | Not full circuit-level realism |
+
+## Beginner lens
+
+Same input, different machine stories.
+
+## Student lens
+
+Different numeric encodings and update rules produce measurable divergence.
+
+## Advanced lens
+
+Treat adapters as controlled abstractions and reason about algorithm-representation coupling.
+
+## Common misconception
+
+"One architecture is universally best."
+
+There is no universal winner. The best architecture depends on goals: pedagogy, stability, speed, interpretability, and physical fidelity.
+
+## Inline Diagram
+
+```text
+Shared scenario pipeline:
+
+Same EMState6 + FrameConfig
+          |
+          +--> Binary adapter  -> metrics/state
+          +--> Analog adapter  -> metrics/state
+          +--> Ternary adapter -> metrics/state
+          +--> Quantum adapter -> metrics/state
+
+Interpret differences as representation effects,
+not scenario differences.
+```
+
+## Try this in the simulator
+
+1. Run low-step and high-step scenarios with identical inputs.
+2. Compare drift and cycle growth.
+3. Change frame velocity and rerun.
+4. Explain which architecture you would choose for:
+   - classroom intuition,
+   - deterministic replay,
+   - symmetry-focused vector reasoning,
+   - phase-geometric exploration.
+
+## Checkpoint Quiz
+
+1. Why must all architectures share the same starting scenario for a fair comparison?
+2. Which architecture in this app most directly demonstrates drift/noise behavior?
+3. Why can binary have high reproducibility yet still lose subtle signal detail?
+4. Why is the quantum panel called conceptual in this project?
+
+<details>
+  <summary>Show answers</summary>
+
+1. So observed differences come from representation/update model, not different inputs.
+2. Analog.
+3. Fixed-width encoding introduces quantization and rounding limits.
+4. It models phase/orientation intuition, not full multi-qubit circuit dynamics.
+
+</details>
