@@ -1,4 +1,4 @@
-# EM Learning Lab
+# EM Learning Lab (one shot by GPT 5.3 Codex Extra High)
 
 Interactive website for teaching electromagnetic field representation and architecture tradeoffs.
 
@@ -39,4 +39,3 @@ npm run dev
 npm run test
 npm run test:e2e
 ```
-# Electromagnetic-Computation
