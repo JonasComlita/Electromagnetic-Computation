@@ -1,0 +1,198 @@
+import Link from 'next/link';
+
+# Lesson 6: Satellite Link — Transmit, Propagate, Receive
+
+Lessons 1–5 built the field model, explained frame transforms, compared architectures, and traced behavior to circuit-level causes.
+
+Lesson 6 puts the signal into the real world: a ground terminal transmits the six-number state upward through atmosphere and vacuum, and a receiver — or a relay satellite — must decode it 600 to 35,000 km away.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Compute free-space path loss from distance and carrier frequency.
+- Explain why binary hard-decision decoding outperforms analog at satellite ranges.
+- Describe what a link margin means and what happens when it goes negative.
+- Connect Doppler shift to the `velocityVc` already present in the EM state model.
+
+## The link budget: accounting for space
+
+A link budget is an accounting of everything that happens to signal power between transmitter and receiver.
+
+```text
+Transmitted EIRP          +52 dBW   (effective isotropic radiated power)
+Free-space path loss      −189 dB   (Ka-band, GEO, nadir pass)
+Rain / atmospheric fade   −8.5 dB   (Ka-band worst-case)
+Receive antenna gain      +35 dBi   (1.2 m dish)
+─────────────────────────────────────
+Received power            −110 dBW
+
+Noise floor               −130 dBW   (kTB at 290 K, 36 MHz)
+─────────────────────────────────────
+SNR                        +20 dB
+Required SNR (QPSK)        −10 dB
+─────────────────────────────────────
+Link margin                +10 dB    ← buffer before the link fails
+```
+
+When margin reaches zero the link drops. When it is negative the decoder cannot recover bits regardless of architecture.
+
+## Free-space path loss
+
+The dominant loss is geometrical spreading — the Friis transmission equation:
+
+```text
+FSPL (dB) = 20·log₁₀(4πdf/c)
+
+d = slant range in metres
+f = carrier frequency in Hz
+c = 3 × 10⁸ m/s
+```
+
+At GEO (35,786 km) on Ka-band (30 GHz):
+
+```text
+FSPL = 20·log₁₀(4π × 35,786,000 × 30×10⁹ / 3×10⁸)
+     = 20·log₁₀(4.49 × 10¹⁰)
+     ≈ 213 dB
+```
+
+That is 213 orders of magnitude of power reduction. No analog system survives it without enormous aperture — which is why C-band analog TV required 3–5 m dishes and Ka-band digital VSAT uses 60 cm.
+
+## Why binary wins at range
+
+Analog keeps field components as continuous values. The noise floor at GEO Ka-band is approximately:
+
+```text
+N = kTB = 1.38×10⁻²³ × 290 × 36×10⁶ ≈ 1.44×10⁻¹³ W = −129 dBW
+```
+
+Received signal at −110 dBW gives SNR ≈ 19 dB, which sounds comfortable, but analog fidelity degrades continuously as noise accumulates over the path. Every 3 dB of additional margin halves the RMS noise error in a linear system.
+
+Binary BPSK makes one hard decision per symbol: is the received phase-rotated signal above or below zero? For BPSK, the bit error rate is:
+
+```text
+BER = 0.5 · erfc(√SNR_linear)
+```
+
+At SNR = 19 dB (×79 linear), this gives BER < 10⁻⁸ — effectively zero errors. The quantization that looks like a limitation in Phase 4 is a feature here: it collapses uncertainty into a decision before noise accumulates further.
+
+## Doppler: the orbital velocity connection
+
+A LEO satellite at 600 km altitude orbits at approximately 7.56 km/s. Relative to a ground station, this is:
+
+```text
+v/c = 7,560 / 299,792,458 ≈ 2.52 × 10⁻⁵
+```
+
+At Ka-band (30 GHz) the Doppler shift is:
+
+```text
+Δf = (v/c) × f = 2.52×10⁻⁵ × 30×10⁹ ≈ 756 kHz
+```
+
+This is not negligible. The receiver must apply a frequency correction before demodulation — exactly what the `velocityVc` parameter in `FrameConfig` already models via `dopplerFactor`. Satellite ground terminals apply a Doppler pre-compensation to the uplink so the satellite receives a centred carrier.
+
+## Orbit comparison
+
+| Orbit | Altitude | RTT | Doppler at Ka | Main use |
+|---|---|---|---|---|
+| LEO | 600 km | ~4 ms | ±756 kHz | Starlink, ISS, imaging |
+| MEO | 20,200 km | ~135 ms | ±387 kHz | GPS, O3b |
+| GEO | 35,786 km | ~238 ms | ±307 kHz | Broadcast TV, VSAT |
+| HEO | apogee ~39,750 km | variable | low at apogee | Polar coverage (Molniya) |
+
+GEO's 238 ms RTT is why it cannot support voice calls without echo cancellation and is unusable for gaming. TCP's congestion window also struggles with such long RTTs without satellite-optimised transport (PEP — Performance Enhancing Proxies).
+
+## Frequency band tradeoffs
+
+Higher frequency = more bandwidth available = more rain fade.
+
+```text
+L-band  (1.5 GHz)  — rain fade 0.1 dB, limited BW, GPS/mobile satellite
+Ka-band (30 GHz)   — rain fade 8+ dB in heavy rain, huge BW, HTS systems
+```
+
+This is why maritime and aviation links often use Ku-band as a compromise, and why Ka-band HTS systems carry rain fade margin in the link budget.
+
+## Quantum: a genuinely different metric
+
+The Micius satellite (2017) demonstrated quantum key distribution over 1,200 km using a single-photon source and polarisation encoding — the same Bloch-sphere geometry that Phase 4's quantum adapter uses conceptually.
+
+For QKD the relevant metric is not BER but **QBER** — quantum bit error rate. If QBER exceeds ~11%, the security proof fails and the key cannot be used. Path loss matters because it reduces photon arrival rate (key generation speed), not because individual photon fidelity degrades. This is a fundamentally different operating regime from classical satellite links.
+
+## Beginner lens
+
+Space is very far. The signal loses almost all its power by the time it arrives. Binary coding recovers a clean bit from almost nothing.
+
+## Student lens
+
+The link budget is a ledger: add transmit power, subtract all losses, compare to noise floor. If SNR exceeds the modulation scheme's threshold, the link works.
+
+## Advanced lens
+
+Every parameter in `SatelliteLink` — orbit, band, EIRP, elevation — feeds into a deterministic cascade of physics: Friis path loss, Doppler from orbital mechanics, atmospheric attenuation from ITU-R propagation models. The architecture choice determines how the residual noise, after that cascade, affects decoded signal quality.
+
+## Common misconceptions
+
+**"Higher frequency means longer range."** The opposite: FSPL increases with frequency, so Ka-band needs more EIRP than L-band to achieve the same received power at the same distance.
+
+**"LEO has less path loss therefore it's always better."** True per pass, but LEO requires frequent handoffs between satellites and Doppler correction. GEO is always in the same sky position, which simplifies terminal design considerably.
+
+**"Quantum satellite links use entanglement for communication."** Micius used QKD for key distribution, not data transmission. Classical authenticated channels carry the ciphertext; the quantum channel only establishes the key.
+
+## Inline diagram
+
+```text
+Ground terminal                         Satellite
+
+  [dish] ─ uplink ──────────────────► [relay]
+                  ↑                        │
+         EIRP − FSPL − fade           Doppler Δf
+         = received power              correction
+                                           │
+                  ◄──────── downlink ──────┘
+
+Each hop: 6-number state → modulated carrier → vacuum propagation
+          → path-loss attenuation → demodulation by architecture
+          → recovered 6-number state (with BER determined by SNR)
+```
+
+## Try this in the simulator
+
+1. Set LEO Ka-band, EIRP 52 dBW. Note the link margin.
+2. Switch to GEO same band and EIRP — watch margin drop by ~28 dB.
+3. Lower EIRP until margin goes negative. Which architecture degrades last?
+4. Switch to L-band at GEO — rain fade drops from 8 dB to 0.1 dB. How does this change which band you would choose for a polar region link?
+
+## Checkpoint questions
+
+1. Why does FSPL increase with carrier frequency even though higher frequency means shorter wavelength?
+2. A link has SNR = 8 dB and required SNR = 10 dB. What is the link margin and what does it mean operationally?
+3. Why can a binary decoder recover a clean bit at SNR = 3 dB while an analog system cannot?
+4. Why does LEO have higher Doppler shift than GEO at the same frequency band?
+
+<details>
+  <summary>Show answers</summary>
+
+1. The antenna capture area (aperture) for a given physical size decreases with wavelength squared. A fixed-size dish captures less power at shorter wavelengths, which appears as higher path loss in the Friis equation.
+2. Margin = −2 dB. The link is operating 2 dB below the demodulator threshold. Under nominal conditions it fails; any additional fade (rain, pointing error) makes it worse.
+3. Binary collapses uncertainty into a hard ±1 decision. Noise affects the probability of a wrong decision but not the decoded symbol magnitude. Analog carries noise forward as a continuous perturbation of the output value.
+4. LEO orbital velocity is ~7.6 km/s vs GEO's ~3.1 km/s. Doppler shift is proportional to v/c × f, so higher orbital speed produces larger frequency displacement.
+
+</details>
+
+<div className="panel mt-4 rounded-2xl p-5 text-sm text-slate-200">
+  <div className="mt-0 leading-7">Read here for theory, then run the satellite link simulator in the guided phase panel.</div>
+  <div className="mt-3 flex flex-wrap gap-2">
+    <Link href="/guided#phase-6" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+      Open Phase 6 Lab
+    </Link>
+    <Link href="/compare" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+      Architecture Compare
+    </Link>
+    <Link href="/lessons/phase-4" className="rounded-full border border-white/20 px-3 py-1.5 hover:bg-white/10">
+      Back to Lesson 4: Architectures
+    </Link>
+  </div>
+</div>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EM Spectrum — HDR Color Translation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #07111a;
+    color: #ddeeff;
+    padding: 1.75rem;
+    max-width: 940px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.45rem; font-weight: 500; color: #fff; margin-bottom: .45rem; }
+  .sub { font-size: 13.5px; color: #7a94aa; line-height: 1.65; margin-bottom: 1.25rem; max-width: 700px; }
+
+  #badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 500;
+    padding: 4px 10px 4px 8px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    border: 1px solid;
+  }
+  #badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  #badge.mode-hdr   { color: #a8f0c8; border-color: rgba(100,220,150,.35); background: rgba(60,180,110,.12); }
+  #badge.mode-hdr   .dot { background: #5de0a0; }
+  #badge.mode-p3    { color: #a8d8f0; border-color: rgba(100,170,220,.35); background: rgba(60,130,200,.12); }
+  #badge.mode-p3    .dot { background: #4db8ef; }
+  #badge.mode-srgb  { color: #f0c8a8; border-color: rgba(220,160,100,.35); background: rgba(180,110,60,.12); }
+  #badge.mode-srgb  .dot { background: #e09050; }
+
+  .region-row { display: flex; margin-bottom: 4px; font-size: 11px; color: #4a6478; user-select: none; }
+  canvas { width: 100%; height: 92px; border-radius: 8px; display: block; cursor: crosshair; }
+  .axis { position: relative; height: 26px; margin-bottom: 1.2rem; }
+  .axis span { position: absolute; font-size: 10.5px; color: #3a5465; white-space: nowrap; top: 5px; }
+
+  .stats { display: flex; gap: 9px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .stat {
+    background: rgba(255,255,255,.04);
+    border: .5px solid rgba(180,215,255,.12);
+    border-radius: 8px;
+    padding: 9px 13px;
+    flex: 1; min-width: 110px;
+  }
+  .stat-label { font-size: 10.5px; color: #5a7888; margin-bottom: 3px; }
+  .stat-val   { font-size: 14.5px; font-weight: 500; color: #ddeeff; }
+
+  .readout {
+    padding: 13px 15px;
+    background: rgba(255,255,255,.04);
+    border: .5px solid rgba(180,215,255,.12);
+    border-radius: 8px;
+    min-height: 62px;
+    display: flex; align-items: center;
+  }
+  .swatch {
+    width: 46px; height: 46px;
+    border-radius: 6px; flex-shrink: 0;
+    border: .5px solid rgba(255,255,255,.18);
+  }
+  .ro-right { margin-left: 13px; }
+  .ro-name  { font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 5px; }
+  .ro-vals  { font-size: 12px; color: #5a7888; display: flex; gap: 14px; flex-wrap: wrap; }
+  .ro-vals strong { color: #c8dde8; }
+  .ro-vals .hue-chip {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
+  .placeholder { font-size: 13px; color: #3a5465; }
+
+  .vis-tag {
+    font-size: 11px;
+    background: rgba(255,255,255,.14);
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 5px;
+    font-weight: 400;
+  }
+  .gamut-note {
+    margin-top: 1rem;
+    font-size: 12px;
+    color: #3a5465;
+    line-height: 1.7;
+    border-top: .5px solid rgba(180,215,255,.08);
+    padding-top: .75rem;
+  }
+  .gamut-note strong { color: #5a7888; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>Electromagnetic spectrum — translated to visible colors</h1>
+<p class="sub">
+  The full visible rainbow stretched across 16 orders of magnitude, rendered at the highest
+  color precision your browser supports. The white bracket marks where human eyes actually work (~0.5% of the bar).
+</p>
+
+<div id="badge" class="mode-srgb">
+  <span class="dot"></span>
+  <span id="badge-text">Detecting color mode…</span>
+</div>
+
+<div id="rr" class="region-row"></div>
+<canvas id="sb" role="img" aria-label="EM spectrum bar from gamma rays to radio waves, colored violet through red"></canvas>
+<div id="ax" class="axis"></div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-label">visible window on this bar</div><div class="stat-val" id="s1">—</div></div>
+  <div class="stat"><div class="stat-label">bit depth (per channel)</div><div class="stat-val" id="s2">—</div></div>
+  <div class="stat"><div class="stat-label">color space</div><div class="stat-val" id="s3">—</div></div>
+  <div class="stat"><div class="stat-label">color model</div><div class="stat-val">oklch</div></div>
+</div>
+
+<div id="ro" class="readout">
+  <span class="placeholder">Hover the spectrum bar to explore any wavelength</span>
+</div>
+
+<p class="gamut-note">
+  <strong>Color generation:</strong> Each pixel uses <code>oklch(0.68 0.32 H)</code> where H sweeps 270° (violet) → 0° (red).
+  oklch is perceptually uniform — equal hue steps look visually equal, unlike HSL.
+  float16 stores 65,536 levels per channel. Rec2020 gamut covers ~75% of human-perceivable color vs sRGB's ~35%.
+  <strong>Display caveat:</strong> HDR colors only render beyond sRGB on an HDR-capable monitor with the browser in HDR mode.
+</p>
+
+<script>
+(function(){
+
+var LN = -12, SP = 16, C_LIGHT = 3e8;
+
+var REGIONS = [
+  {l:'Gamma',     s:-12,  e:-11},
+  {l:'X-ray',     s:-11,  e:-8},
+  {l:'UV',        s:-8,   e:-6.42},
+  {l:'Visible',   s:-6.42,e:-6.155},
+  {l:'Infrared',  s:-6.155,e:-3},
+  {l:'Microwave', s:-3,   e:-1},
+  {l:'Radio',     s:-1,   e:4}
+];
+
+var HUES = [
+  [270,'violet'],
+  [250,'indigo'],
+  [220,'blue'],
+  [185,'cyan'],
+  [160,'teal'],
+  [140,'green'],
+  [115,'lime'],
+  [90, 'yellow'],
+  [55, 'amber'],
+  [30, 'orange'],
+  [10, 'red']
+];
+
+function posFromLog(l)  { return (l - LN) / SP; }
+function hueFromLog(l)  { return 270 * (1 - posFromLog(l)); }
+function nameFromHue(h) {
+  var r = HUES.find(function(t){ return h >= t[0]; });
+  return r ? r[1] : 'red';
+}
+
+function fmtLambda(m) {
+  if (m < 1e-9) return (m * 1e12).toFixed(0) + ' pm';
+  if (m < 1e-6) return (m * 1e9).toFixed(2) + ' nm';
+  if (m < 1e-3) return (m * 1e6).toFixed(2) + ' µm';
+  if (m < 1)    return (m * 1e3).toFixed(2) + ' mm';
+  if (m < 1e3)  return m.toFixed(2) + ' m';
+  return (m / 1e3).toFixed(0) + ' km';
+}
+function fmtFreq(f) {
+  if (f >= 1e18) return (f / 1e18).toFixed(2) + ' EHz';
+  if (f >= 1e15) return (f / 1e15).toFixed(2) + ' PHz';
+  if (f >= 1e12) return (f / 1e12).toFixed(2) + ' THz';
+  if (f >= 1e9)  return (f / 1e9).toFixed(2)  + ' GHz';
+  if (f >= 1e6)  return (f / 1e6).toFixed(2)  + ' MHz';
+  if (f >= 1e3)  return (f / 1e3).toFixed(2)  + ' kHz';
+  return f.toFixed(0) + ' Hz';
+}
+
+/* ── Color space detection ── */
+var colorSpace  = 'srgb';
+var pixelFormat = 'uint8';
+var bitDepth    = 8;
+
+function tryContext(cs, pf) {
+  try {
+    var t = document.createElement('canvas');
+    t.width = 2; t.height = 2;
+    var opts = { colorSpace: cs };
+    if (pf) opts.pixelFormat = pf;
+    var ctx = t.getContext('2d', opts);
+    /* verify it actually honoured the request */
+    if (!ctx) return false;
+    if (ctx.getContextAttributes) {
+      var a = ctx.getContextAttributes();
+      if (a.colorSpace !== cs) return false;
+    }
+    return true;
+  } catch(e) { return false; }
+}
+
+if (tryContext('rec2020', 'float16')) {
+  colorSpace = 'rec2020'; pixelFormat = 'float16'; bitDepth = 16;
+} else if (tryContext('rec2020')) {
+  colorSpace = 'rec2020'; bitDepth = 10;
+} else if (tryContext('display-p3')) {
+  colorSpace = 'display-p3'; bitDepth = 8;
+}
+
+/* Update badge */
+var badge = document.getElementById('badge');
+var badgeText = document.getElementById('badge-text');
+if (colorSpace === 'rec2020' && pixelFormat === 'float16') {
+  badge.className = 'mode-hdr';
+  badgeText.textContent = 'float16 rec2020 — maximum precision active';
+} else if (colorSpace === 'rec2020') {
+  badge.className = 'mode-hdr';
+  badgeText.textContent = 'rec2020 active';
+} else if (colorSpace === 'display-p3') {
+  badge.className = 'mode-p3';
+  badgeText.textContent = 'display-p3 active — rec2020 float16 not available';
+} else {
+  badge.className = 'mode-srgb';
+  badgeText.textContent = 'sRGB fallback — upgrade to Chrome/Edge for HDR';
+}
+document.getElementById('s2').textContent = bitDepth + '-bit';
+document.getElementById('s3').textContent = colorSpace;
+
+/* ── Canvas ── */
+var cv = document.getElementById('sb');
+var activeCtx = null;
+var lastX = -1;
+
+function makeCtx() {
+  var opts = { colorSpace: colorSpace };
+  if (pixelFormat !== 'uint8') opts.pixelFormat = pixelFormat;
+  var ctx = cv.getContext('2d', opts);
+  activeCtx = ctx;
+  return ctx;
+}
+
+function oklchStr(H) {
+  /* L=0.68, C=0.32 across all hues gives saturated but non-blown colors
+     in rec2020. oklch is supported as a fillStyle string in modern browsers. */
+  return 'oklch(0.68 0.32 ' + H.toFixed(4) + ')';
+}
+
+function draw(hx) {
+  if (hx !== undefined) lastX = hx; else hx = lastX;
+  var dpr = window.devicePixelRatio || 1;
+  var R = cv.getBoundingClientRect();
+  var W = R.width, H = R.height;
+  if (W < 10) return;
+  cv.width  = Math.round(W * dpr);
+  cv.height = Math.round(H * dpr);
+
+  var ctx = makeCtx();
+  ctx.scale(dpr, dpr);
+
+  /* Draw the spectrum — one 1px column per display pixel */
+  for (var x = 0; x < W; x++) {
+    var logL = LN + (x / W) * SP;
+    ctx.fillStyle = oklchStr(hueFromLog(logL));
+    ctx.fillRect(x, 0, 1, H);
+  }
+
+  /* Visible window bracket */
+  var vx1 = posFromLog(-6.42)   * W;
+  var vx2 = posFromLog(-6.155)  * W;
+  var vcx = (vx1 + vx2) / 2;
+
+  /* Subtle dark fill so the label reads over any hue */
+  ctx.fillStyle = 'rgba(0,0,0,0.38)';
+  ctx.fillRect(vx1, 1, vx2 - vx1, H - 2);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(vx1 + 0.75, 1.75, vx2 - vx1 - 1.5, H - 3.5);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.font = 'bold 10px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('eyes', vcx, H / 2);
+
+  /* Hover crosshair */
+  if (hx >= 0) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(hx, 0); ctx.lineTo(hx, H); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  /* Visible window percentage readout */
+  var pct = ((vx2 - vx1) / W * 100).toFixed(3);
+  var el = document.getElementById('s1');
+  if (el) el.textContent = pct + '% of bar width';
+}
+
+/* ── Region labels ── */
+var rrEl = document.getElementById('rr');
+REGIONS.forEach(function(r) {
+  var w = (posFromLog(r.e) - posFromLog(r.s)) * 100;
+  var d = document.createElement('div');
+  d.style.cssText = 'width:' + w + '%;text-align:center;overflow:hidden;white-space:nowrap;box-sizing:border-box;';
+  d.textContent = w > 2 ? r.l : '';
+  rrEl.appendChild(d);
+});
+
+/* ── Axis ticks ── */
+var axEl = document.getElementById('ax');
+[-12,-10,-8,-6,-4,-2,0,2,4].forEach(function(log) {
+  var d = document.createElement('span');
+  var pct = posFromLog(log) * 100;
+  var tx = pct < 5 ? '0' : pct > 95 ? '-100%' : '-50%';
+  d.style.left = pct + '%';
+  d.style.transform = 'translateX(' + tx + ')';
+  d.textContent = fmtLambda(Math.pow(10, log));
+  axEl.appendChild(d);
+});
+
+/* ── Hover interaction ── */
+function onHover(clientX) {
+  var R  = cv.getBoundingClientRect();
+  var x  = Math.max(0, Math.min(R.width, clientX - R.left));
+  var logL = LN + (x / R.width) * SP;
+  var lam  = Math.pow(10, logL);
+  var freq = C_LIGHT / lam;
+  var hv   = hueFromLog(logL);
+  var reg  = REGIONS.find(function(r){ return logL >= r.s && logL < r.e; }) || REGIONS[REGIONS.length - 1];
+  var isVis = logL >= -6.42 && logL < -6.155;
+
+  draw(x);
+
+  /* Swatch: use oklch so it matches the canvas color exactly */
+  var swatchColor = oklchStr(hv);
+  var colorName   = nameFromHue(hv);
+
+  var ro = document.getElementById('ro');
+  ro.innerHTML = '';
+
+  var sw = document.createElement('div');
+  sw.className = 'swatch';
+  sw.style.background = swatchColor;
+
+  var right = document.createElement('div');
+  right.className = 'ro-right';
+
+  var tag = isVis ? '<span class="vis-tag">within human vision</span>' : '';
+  right.innerHTML =
+    '<div class="ro-name">' + reg.l + tag + ' &nbsp;·&nbsp; '
+    + '<em style="color:' + swatchColor + '">' + colorName + '</em></div>'
+    + '<div class="ro-vals">'
+    + '<span>λ = <strong>' + fmtLambda(lam) + '</strong></span>'
+    + '<span>f = <strong>' + fmtFreq(freq) + '</strong></span>'
+    + '<span>oklch <strong>0.68 / 0.32 / ' + Math.round(hv) + '°</strong></span>'
+    + '<span style="color:#3a5465">log λ = ' + logL.toFixed(3) + '</span>'
+    + '</div>';
+
+  ro.appendChild(sw);
+  ro.appendChild(right);
+}
+
+cv.addEventListener('mousemove', function(e) { onHover(e.clientX); });
+cv.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  onHover(e.touches[0].clientX);
+}, { passive: false });
+cv.addEventListener('mouseleave', function() {
+  draw(-1);
+  document.getElementById('ro').innerHTML =
+    '<span class="placeholder">Hover the spectrum bar to explore any wavelength</span>';
+});
+
+setTimeout(draw, 80);
+window.addEventListener('resize', function(){ setTimeout(draw, 30); });
+
+})();
+</script>
+</body>
+</html>

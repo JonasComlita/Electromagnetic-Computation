@@ -1,0 +1,93 @@
+# Lesson 2: Relativity and Lag
+
+Lesson 1 answered "what the field state is." This lesson answers "why observers disagree about that same state."
+
+When observer velocity changes, measured relationships between components change. The field did not become random; your frame changed.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Explain why changing `v/c` changes observed phase and magnitude relationships.
+- Interpret Doppler scaling, simultaneity offset, and gamma-driven effects.
+- Distinguish what is physically transformed from what is only visualized conceptually.
+
+## Key idea: frame dependence
+
+The same physical event can be described differently by different observers.
+
+In the panel, velocity affects:
+
+- `doppler factor`: observed compression/expansion of oscillation patterns.
+- `simultaneity offset`: "same time" slices differ across moving frames.
+- `gamma`: scaling factor that grows as `|v/c|` approaches 1.
+
+## Why this matters before architecture
+
+If you skip frame effects, architecture comparisons can be misleading. You would be comparing machines on a simplified signal that hides meaningful transformation cost.
+
+## V1 modeling boundary
+
+For this website version:
+
+- Interactive computation uses Special Relativity style Lorentz boosts.
+- General Relativity appears as a conceptual curvature visualization.
+- No numerical GR metric solver is running in this panel.
+
+That boundary is intentional: it keeps interaction fast while still teaching the geometric idea.
+
+## Beginner lens
+
+Changing observer speed changes what you measure, even when looking at the "same" wave.
+
+## Student lens
+
+Use velocity as a parameter in the transformation pipeline, not as a cosmetic animation setting.
+
+## Advanced lens
+
+Think in terms of coordinate transforms and invariants. The six-value payload is re-expressed under frame mapping.
+
+## Common misconception
+
+"Relativity only matters at extreme speeds."
+
+The strongest effects appear near `c`, but the conceptual structure is present at any nonzero relative velocity.
+
+## Inline Diagram
+
+```text
+Two observers, one physical wave:
+
+Rest observer O_r:        |---- equal-time slice t_r ----|
+Moving observer O_m:      /---- equal-time slice t_m ----/
+
+Same field event, different simultaneity slices.
+
+As |v/c| increases:
+- gamma increases
+- Doppler shift becomes more pronounced
+- measured phase alignment changes
+```
+
+## Try this in the simulator
+
+1. Start at `v/c = 0.00` and note baseline values.
+2. Move to `v/c = 0.30` and compare Doppler and lag readouts.
+3. Move to `v/c = 0.80` and observe how quickly gamma rises.
+4. Toggle observer modes and explain what changed in measurement vs interpretation.
+
+## Checkpoint Quiz
+
+1. Does changing observer velocity necessarily mean the field became physically different?
+2. Which quantity grows rapidly as `|v/c|` approaches 1: gamma, phase offset, or amplitude slider value?
+3. In V1, are we numerically solving GR curvature equations in real time?
+
+<details>
+  <summary>Show answers</summary>
+
+1. No. The representation changes with frame; the underlying event is not random.
+2. Gamma.
+3. No. We compute SR-style transforms and show GR conceptually.
+
+</details>

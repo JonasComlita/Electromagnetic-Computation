@@ -1,0 +1,93 @@
+# Lesson 3: 4x4 vs 6-Value Representation
+
+This lesson resolves a common confusion: "Are we using a 4x4 matrix or a 6D vector?"
+
+Answer: both, for different jobs.
+
+- The `4x4` tensor form is a transformation structure.
+- The `6-value` form is the unique field content.
+
+## Learning goals
+
+By the end of this lesson, you should be able to:
+
+- Explain why these forms are compatible, not contradictory.
+- Identify why only six tensor entries are independent.
+- Choose the right representation for UI/storage vs transform operations.
+
+## The structure-content distinction
+
+Think of two layers:
+
+- Structure layer (`4x4`): where spacetime-compatible transform math is applied.
+- Content layer (`Ex,Ey,Ez,Bx,By,Bz`): the compressed state you keep and display.
+
+The tensor is antisymmetric, so many positions are zero or mirrored. That is why six values are sufficient to carry unique information.
+
+## Why not store full 4x4 all the time?
+
+You can, but it is inefficient for this educational app:
+
+- More storage than needed for unique state.
+- Harder to read for learners.
+- Adds noise to architecture comparison where we care about representation cost.
+
+## Recommended practice (used in this site)
+
+1. Keep canonical state in six-value form.
+2. Lift to `4x4` only when applying frame/transform logic.
+3. Extract back to six-value form for display and downstream simulators.
+
+## Beginner lens
+
+Six numbers are the ingredients. `4x4` is the mixing bowl.
+
+## Student lens
+
+Convert to tensor for transform math, then convert back for intuitive interpretation.
+
+## Advanced lens
+
+Treat this as a serialization strategy around a transform algebra: minimal payload, explicit lifting/lowering steps.
+
+## Common misconception
+
+"If tensor is 4x4, there must be 16 independent values."
+
+No. Antisymmetry constraints reduce independent content to six.
+
+## Inline Diagram
+
+```text
+Antisymmetric tensor pattern (conceptual):
+
+      0    Ex   Ey   Ez
+    -Ex    0   -Bz   By
+    -Ey   Bz    0   -Bx
+    -Ez  -By   Bx    0
+
+Independent slots: Ex, Ey, Ez, Bx, By, Bz  (6 total)
+All other entries are zero-diagonal or mirrored sign entries.
+```
+
+## Try this in the simulator
+
+1. Inspect the tensor table and identify mirrored entries.
+2. Confirm diagonal zeros.
+3. Apply boost, then re-extract six values.
+4. Explain what changed because of frame transform, not because of new data dimensions.
+
+## Checkpoint Quiz
+
+1. Why can a 4x4 tensor still carry only six independent field values?
+2. Which representation is better for user-facing display: 4x4 tensor or 6-value vector?
+3. Which representation is convenient for Lorentz-style transforms?
+
+<details>
+  <summary>Show answers</summary>
+
+1. Antisymmetry removes independent diagonal/mirrored degrees of freedom.
+2. 6-value vector.
+3. 4x4 tensor form.
+
+</details>
