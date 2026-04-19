@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SpectrumBandLocator } from '@/components/simulations/SpectrumBandLocator';
 
 # Lesson 6: Satellite Link — Transmit, Propagate, Receive
 
@@ -107,6 +108,8 @@ GEO's 238 ms RTT is why it cannot support voice calls without echo cancellation 
 ## Frequency band tradeoffs
 
 Higher frequency = more bandwidth available = more rain fade.
+
+<SpectrumBandLocator readOnly className="my-6" />
 
 ```text
 L-band  (1.5 GHz)  — rain fade 0.1 dB, limited BW, GPS/mobile satellite

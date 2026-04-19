@@ -14,6 +14,7 @@ import {
   type SatelliteArchitectureResult
 } from '@/lib/simulators/satellite';
 import { SatelliteGeometryView } from '@/components/simulations/SatelliteGeometryView';
+import { SpectrumBandLocator } from '@/components/simulations/SpectrumBandLocator';
 import { useSessionStore } from '@/lib/store/useSessionStore';
 import type { FrequencyBand, SatelliteLink, SatelliteOrbit } from '@/lib/types';
 
@@ -126,21 +127,12 @@ export function SatelliteLinkPanel(): JSX.Element {
         <div className="panel rounded-2xl p-4 space-y-4">
           <div>
             <h4 className="text-lg font-semibold text-white">Frequency band</h4>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {BANDS.map((b) => (
-                <button
-                  key={b}
-                  type="button"
-                  onClick={() => setBand(b)}
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    b === band
-                      ? 'border-warm/70 bg-warm/20 text-warm'
-                      : 'border-white/20 text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  {b}
-                </button>
-              ))}
+            <div className="mt-4">
+              <SpectrumBandLocator 
+                selectedBand={band} 
+                onBandSelect={setBand} 
+                className="mb-4"
+              />
             </div>
             <p className="mt-1.5 text-xs text-slate-400">{bandP.label} · {bandP.typicalUse}</p>
           </div>

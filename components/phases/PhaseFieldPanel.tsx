@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckpointCard } from '@/components/phases/CheckpointCard';
 import { WaveFieldCanvas } from '@/components/simulations/WaveFieldCanvas';
+import { SpectrumBandLocator } from '@/components/simulations/SpectrumBandLocator';
 import { trackEvent } from '@/lib/analytics';
 import { pluckField, stepWave } from '@/lib/math/wave';
 import { useSessionStore } from '@/lib/store/useSessionStore';
@@ -24,6 +25,7 @@ export function PhaseFieldPanel(): JSX.Element {
   const setEMState = useSessionStore((state) => state.setEMState);
   const patchFrame = useSessionStore((state) => state.patchFrame);
   const [running, setRunning] = useState(true);
+  const [showSpectrum, setShowSpectrum] = useState(false);
   const dt = tier === 'advanced' ? 0.02 : tier === 'student' ? 0.04 : 0.06;
 
   useEffect(() => {
@@ -54,6 +56,28 @@ export function PhaseFieldPanel(): JSX.Element {
         <p className="text-xs uppercase tracking-[0.25em] text-accent/70">Phase 1</p>
         <h3 className="text-2xl font-semibold text-white">The Medium: Electromagnetic Waves</h3>
         <p className="mt-2 max-w-3xl text-slate-200">{TIER_COPY[tier]}</p>
+        
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowSpectrum(!showSpectrum)}
+            className="text-xs text-accent hover:underline flex items-center gap-1"
+          >
+            {showSpectrum ? 'Hide' : 'Show'} full EM spectrum
+          </button>
+          
+          {showSpectrum && (
+            <div className="mt-4 panel rounded-2xl p-6 animate-in fade-in zoom-in-95 duration-300">
+              <SpectrumBandLocator readOnly />
+              <p className="mt-4 text-xs text-slate-400 max-w-2xl leading-relaxed">
+                Radio waves, visible light, and X-rays are all the same physical phenomenon. 
+                They differ only in their frequency (and wavelength). The 3D simulator below operates 
+                within a generic mathematical frame, but in the real world, its frequency would 
+                place it somewhere on this bar.
+              </p>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
